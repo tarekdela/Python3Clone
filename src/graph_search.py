@@ -77,7 +77,7 @@ def breadth_first_search(graph, start_cell, goal_cell):
     while queue:
         # Pop from front of queue (FIFO)
         current_node = queue.pop(0)
-        graph.visited_cells.append((current_node.i, current_node.j))
+        graph.visited_cells.append(Cell(current_node.i, current_node.j))
         
         # Check if goal is reached
         if current_node.i == goal_cell.i and current_node.j == goal_cell.j:
