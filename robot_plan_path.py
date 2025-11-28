@@ -1,5 +1,8 @@
 import argparse
 from mbot_bridge.api import MBot
+import time
+import math
+
 
 from src.graph import GridGraph, Cell
 from src.graph_search import a_star_search, breadth_first_search, depth_first_search
@@ -37,10 +40,37 @@ if __name__ == "__main__":
 
     path = []
     # TODO: Call graph search function and put the result in path.
+    path = breadth_first_search(graph, start, goal)
+    
+    # Check if a path was found
+    if not path:
+        print("No path found to the goal!")
+        exit(1)
 
     # Send the path to the robot.
     print(f"Found path of length {len(path)}. Driving to the goal!")
     robot.drive_path(cells_to_poses(path, graph))
+
+    # Wait for robot to reach the goal
+
+    while True:
+        current_pose = robot.read_slam_pose()
+        if len(current_pose) == 0:
+            time.sleep(0.1)
+            continue
+    
+    #Calculaste distance to goal
+        goal_pos = graph.cell_to_pos(goal.i, goal.j)
+        dx = current_pose[0] - goal_pos[0]
+        dy = current_pose[1] - goal_pos[1]
+        distance = math.sqrt(dx**2 + dy**2)
+         
+         # Check if robot reached goal (within 0.1 meters)
+        if distance < 0.1:
+            print("Robot reached the goal!")
+            break
+         
+        time.sleep(0.1)
 
     # Genererate the path file for visualization.
     generate_plan_file(graph, start, goal, path)
