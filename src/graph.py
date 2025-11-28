@@ -12,6 +12,18 @@ class Cell(object):
 that here."""
 
 
+class Node(object):
+    """Class to store node data for graph search algorithms."""
+    def __init__(self, i, j):
+        self.i = i  # x-axis index (column)
+        self.j = j  # y-axis index (row)
+        self.parent = None  # Parent node for path reconstruction
+        self.g_cost = float('inf')  # Cost from start node
+        self.h_cost = 0.0  # Heuristic cost to goal
+        self.f_cost = float('inf')  # Total cost (g_cost + h_cost)
+        self.visited = False  # Whether this node has been visited
+
+
 class GridGraph:
     """Helper class to represent an occupancy grid map as a graph."""
     def __init__(self, file_path=None, width=-1, height=-1, origin=(0, 0),
@@ -46,6 +58,7 @@ class GridGraph:
         self.visited_cells = []  # Stores which cells have been visited in order for visualization.
 
         # TODO: Define any additional member variables to store node data.
+        self.nodes = None  # 2D array to store Node objects for each cell
 
     def as_string(self):
         """Returns the map data as a string for visualization."""
@@ -155,7 +168,22 @@ class GridGraph:
         None if the node has no parent. This function is used to trace back the
         path after graph search."""
         # TODO (P3): Return the parent of the node at the cell.
-        return None
+        # Check if nodes have been initialized
+        if self.nodes is None:
+            return None
+        
+        # Check if cell is within bounds
+        if not self.is_cell_in_bounds(cell.i, cell.j):
+            return None
+        
+        # Get the node at this cell
+        node = self.nodes[cell.j][cell.i]
+        
+        # Return the parent as a Cell object, or None if no parent exists
+        if node.parent is None:
+            return None
+        else:
+            return Cell(node.parent.i, node.parent.j)
 
     def init_graph(self):
         """Initializes the node data in the graph in preparation for graph search.
@@ -167,6 +195,8 @@ class GridGraph:
         self.visited_cells = []  # Reset visited cells for visualization.
 
         # TODO (P3): Initialize your graph nodes.
+        # Create a 2D array of Node objects for each cell in the graph
+        self.nodes = [[Node(i, j) for i in range(self.width)] for j in range(self.height)]
 
     def find_neighbors(self, i, j):
         """Returns a list of the neighbors of the given cell. This should not
@@ -177,4 +207,22 @@ class GridGraph:
         # bounds of the graph.
 
         # HINT: The function is_cell_in_bounds() might come in handy.
+        
+        # 8-connected neighbors: up, down, left, right, and 4 diagonals
+        directions = [
+            (-1, 0),   # left
+            (1, 0),    # right
+            (0, -1),   # down
+            (0, 1),    # up
+            (-1, -1),  # bottom-left diagonal
+            (1, -1),   # bottom-right diagonal
+            (-1, 1),   # top-left diagonal
+            (1, 1)     # top-right diagonal
+        ]
+        
+        for di, dj in directions:
+            ni, nj = i + di, j + dj
+            if self.is_cell_in_bounds(ni, nj):
+                nbrs.append(Cell(ni, nj))
+        
         return nbrs
